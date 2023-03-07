@@ -38,10 +38,12 @@ import { SetVariableSettings } from '@/features/blocks/logic/setVariable'
 import { TypebotLinkForm } from '@/features/blocks/logic/typebotLink'
 import { ButtonsBlockSettings } from '@/features/blocks/inputs/buttons'
 import { ChatwootSettingsForm } from '@/features/blocks/integrations/chatwoot'
-import { MakeComSettings } from '@/features/blocks/integrations/makeCom'
 import { HelpDocButton } from './HelpDocButton'
 import { WaitSettings } from '@/features/blocks/logic/wait/components/WaitSettings'
 import { ScriptSettings } from '@/features/blocks/logic/script/components/ScriptSettings'
+import { JumpSettings } from '@/features/blocks/logic/jump/components/JumpSettings'
+import { MakeComSettings } from '@/features/blocks/integrations/makeCom/components/MakeComSettings'
+import { PabblyConnectSettings } from '@/features/blocks/integrations/pabbly/components/PabblyConnectSettings'
 
 type Props = {
   block: BlockWithOptions
@@ -220,6 +222,15 @@ export const BlockSettings = ({
         />
       )
     }
+    case LogicBlockType.JUMP: {
+      return (
+        <JumpSettings
+          groupId={block.groupId}
+          options={block.options}
+          onOptionsChange={handleOptionsChange}
+        />
+      )
+    }
     case IntegrationBlockType.GOOGLE_SHEETS: {
       return (
         <GoogleSheetsSettingsBody
@@ -238,20 +249,20 @@ export const BlockSettings = ({
       )
     }
     case IntegrationBlockType.ZAPIER: {
-      return <ZapierSettings block={block} />
+      return (
+        <ZapierSettings block={block} onOptionsChange={handleOptionsChange} />
+      )
     }
     case IntegrationBlockType.MAKE_COM: {
-      return <MakeComSettings block={block} />
+      return (
+        <MakeComSettings block={block} onOptionsChange={handleOptionsChange} />
+      )
     }
     case IntegrationBlockType.PABBLY_CONNECT: {
       return (
-        <WebhookSettings
+        <PabblyConnectSettings
           block={block}
           onOptionsChange={handleOptionsChange}
-          provider={{
-            name: 'Pabbly Connect',
-            url: 'https://www.pabbly.com/connect/integrations/typebot/',
-          }}
         />
       )
     }

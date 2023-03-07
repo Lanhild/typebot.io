@@ -5,7 +5,7 @@ import { GeneralSettings } from 'models'
 import React from 'react'
 import { isDefined } from 'utils'
 import { ChangePlanModal, isFreePlan, LimitReached } from '@/features/billing'
-import { SwitchWithLabel } from '@/components/SwitchWithLabel'
+import { SwitchWithLabel } from '@/components/inputs/SwitchWithLabel'
 import { LockTag } from '@/features/billing'
 
 type Props = {
@@ -44,12 +44,6 @@ export const GeneralSettingsForm = ({
     onGeneralSettingsChange({
       ...generalSettings,
       isHideQueryParamsEnabled,
-    })
-
-  const handleDisableResultsSavingChange = (isResultSavingEnabled: boolean) =>
-    onGeneralSettingsChange({
-      ...generalSettings,
-      isResultSavingEnabled: !isResultSavingEnabled,
     })
 
   return (
@@ -95,16 +89,6 @@ export const GeneralSettingsForm = ({
         initialValue={generalSettings.isHideQueryParamsEnabled ?? true}
         onCheckChange={handleHideQueryParamsChange}
         moreInfoContent="If your URL contains query params, they will be automatically hidden when the bot starts."
-      />
-      <SwitchWithLabel
-        label="Disable responses saving"
-        initialValue={
-          isDefined(generalSettings.isResultSavingEnabled)
-            ? !generalSettings.isResultSavingEnabled
-            : false
-        }
-        onCheckChange={handleDisableResultsSavingChange}
-        moreInfoContent="Prevent responses from being saved on Typebot. Chats limit usage will still be tracked."
       />
     </Stack>
   )

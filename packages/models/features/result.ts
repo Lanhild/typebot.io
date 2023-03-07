@@ -9,7 +9,6 @@ export const resultSchema = schemaForType<ResultPrisma>()(
   z.object({
     id: z.string(),
     createdAt: z.date(),
-    updatedAt: z.date(),
     typebotId: z.string(),
     variables: z.array(variableWithValueSchema),
     isCompleted: z.boolean(),
@@ -48,8 +47,13 @@ export type ResultWithAnswersInput = z.infer<
 >
 export type Log = z.infer<typeof logSchema>
 
-export type ResultValues = Pick<
+export type ResultValuesInput = Pick<
   ResultWithAnswersInput,
+  'answers' | 'createdAt' | 'variables'
+>
+
+export type ResultValues = Pick<
+  ResultWithAnswers,
   'answers' | 'createdAt' | 'variables'
 >
 

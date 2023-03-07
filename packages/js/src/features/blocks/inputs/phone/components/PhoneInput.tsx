@@ -13,7 +13,6 @@ type PhoneInputProps = Pick<
 > & {
   defaultValue?: string
   onSubmit: (value: InputSubmitContent) => void
-  hasGuestAvatar: boolean
 }
 
 export const PhoneInput = (props: PhoneInputProps) => {
@@ -25,11 +24,32 @@ export const PhoneInput = (props: PhoneInputProps) => {
 
   const handleInput = (inputValue: string | undefined) => {
     setInputValue(inputValue as string)
-    const matchedCountry = phoneCountries.find(
-      (country) =>
-        country.dial_code === inputValue &&
-        country.code !== selectedCountryCode()
+    if (
+      (inputValue === '' || inputValue === '+') &&
+      selectedCountryCode() !== 'INT'
     )
+      setSelectedCountryCode('INT')
+    const matchedCountry =
+      inputValue?.startsWith('+') &&
+      inputValue.length > 2 &&
+      phoneCountries.reduce<typeof phoneCountries[number] | null>(
+        (matchedCountry, country) => {
+          if (
+            !country?.dial_code ||
+            (matchedCountry !== null && !matchedCountry.dial_code)
+          ) {
+            return matchedCountry
+          }
+          if (
+            inputValue?.startsWith(country.dial_code) &&
+            country.dial_code.length > (matchedCountry?.dial_code.length ?? 0)
+          ) {
+            return country
+          }
+          return matchedCountry
+        },
+        null
+      )
     if (matchedCountry) setSelectedCountryCode(matchedCountry.code)
   }
 
@@ -67,7 +87,6 @@ export const PhoneInput = (props: PhoneInputProps) => {
       class={'flex items-end justify-between rounded-lg pr-2 typebot-input'}
       data-testid="input"
       style={{
-        'margin-right': props.hasGuestAvatar ? '50px' : '8px',
         'max-width': '400px',
       }}
       onKeyDown={submitWhenEnter}

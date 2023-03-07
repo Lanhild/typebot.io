@@ -18,6 +18,8 @@ export const createCheckoutSession = authenticatedProcedure
   })
   .input(
     z.object({
+      email: z.string(),
+      company: z.string(),
       workspaceId: z.string(),
       prefilledEmail: z.string().optional(),
       currency: z.enum(['usd', 'eur']),
@@ -25,6 +27,12 @@ export const createCheckoutSession = authenticatedProcedure
       returnUrl: z.string(),
       additionalChats: z.number(),
       additionalStorage: z.number(),
+      vat: z
+        .object({
+          type: z.string(),
+          value: z.string(),
+        })
+        .optional(),
     })
   )
   .output(
@@ -35,8 +43,10 @@ export const createCheckoutSession = authenticatedProcedure
   .mutation(
     async ({
       input: {
+        vat,
+        email,
+        company,
         workspaceId,
-        prefilledEmail,
         currency,
         plan,
         returnUrl,
@@ -69,17 +79,36 @@ export const createCheckoutSession = authenticatedProcedure
         apiVersion: '2022-11-15',
       })
 
+      await prisma.user.updateMany({
+        where: {
+          id: user.id,
+        },
+        data: {
+          company,
+        },
+      })
+
+      const customer = await stripe.customers.create({
+        email,
+        name: company,
+        metadata: { workspaceId },
+        tax_id_data: vat
+          ? [vat as Stripe.CustomerCreateParams.TaxIdDatum]
+          : undefined,
+      })
+
       const session = await stripe.checkout.sessions.create({
         success_url: `${returnUrl}?stripe=${plan}&success=true`,
         cancel_url: `${returnUrl}?stripe=cancel`,
         allow_promotion_codes: true,
-        customer_email: prefilledEmail,
+        customer: customer.id,
+        customer_update: {
+          address: 'auto',
+          name: 'never',
+        },
         mode: 'subscription',
         metadata: { workspaceId, plan, additionalChats, additionalStorage },
         currency,
-        tax_id_collection: {
-          enabled: true,
-        },
         billing_address_collection: 'required',
         automatic_tax: { enabled: true },
         line_items: parseSubscriptionItems(

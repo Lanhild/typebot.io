@@ -1,9 +1,12 @@
 import { ExecuteLogicResponse } from '@/features/chat'
+import {
+  addEdgeToTypebot,
+  createPortalEdge,
+} from '@/features/chat/api/utils/addEdgeToTypebot'
 import { saveErrorLog } from '@/features/logs/api'
 import prisma from '@/lib/prisma'
 import {
   TypebotLinkBlock,
-  Edge,
   SessionState,
   TypebotInSession,
   Variable,
@@ -48,27 +51,16 @@ export const executeTypebotLink = async (
       })
     return { outgoingEdgeId: block.outgoingEdgeId }
   }
-  const portalEdge: Edge = {
-    id: (Math.random() * 1000).toString(),
-    from: { blockId: '', groupId: '' },
-    to: {
-      groupId: nextGroupId,
-    },
-  }
+
+  const portalEdge = createPortalEdge({ to: { groupId: nextGroupId } })
+
   newSessionState = addEdgeToTypebot(newSessionState, portalEdge)
+
   return {
     outgoingEdgeId: portalEdge.id,
     newSessionState,
   }
 }
-
-const addEdgeToTypebot = (state: SessionState, edge: Edge): SessionState => ({
-  ...state,
-  typebot: {
-    ...state.typebot,
-    edges: [...state.typebot.edges, edge],
-  },
-})
 
 const addLinkedTypebotToState = (
   state: SessionState,
@@ -123,7 +115,8 @@ const getLinkedTypebot = async (
   state: SessionState,
   typebotId: string
 ): Promise<TypebotInSession | null> => {
-  const { typebot, isPreview } = state
+  const { typebot, result } = state
+  const isPreview = !result.id
   if (typebotId === 'current') return typebot
   const availableTypebots =
     'linkedTypebots' in state
@@ -131,12 +124,12 @@ const getLinkedTypebot = async (
       : [typebot]
   const linkedTypebot =
     availableTypebots.find(byId(typebotId)) ??
-    (await fetchTypebot({ isPreview }, typebotId))
+    (await fetchTypebot(isPreview, typebotId))
   return linkedTypebot
 }
 
 const fetchTypebot = async (
-  { isPreview }: Pick<SessionState, 'isPreview'>,
+  isPreview: boolean,
   typebotId: string
 ): Promise<TypebotInSession | null> => {
   if (isPreview) {
